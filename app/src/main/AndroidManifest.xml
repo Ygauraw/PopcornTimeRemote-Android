@@ -27,10 +27,7 @@
             android:name=".activities.ControllerActivity"
             android:screenOrientation="portrait"
             android:label="@string/app_name" />
-        <activity
-            android:name=".activities.PairingScannerActivity"
-            android:screenOrientation="portrait"
-            android:label="@string/app_name" />
+
         <provider
             android:name="eu.se_bastiaan.popcorntimeremote.database.InstanceProvider"
             android:authorities="eu.se_bastiaan.popcorntimeremote.instanceprovider"

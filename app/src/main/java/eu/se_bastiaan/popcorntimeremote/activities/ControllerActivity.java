@@ -26,12 +26,10 @@ import eu.se_bastiaan.popcorntimeremote.fragments.JoystickMovieControllerFragmen
 import eu.se_bastiaan.popcorntimeremote.fragments.JoystickPlayerControllerFragment;
 import eu.se_bastiaan.popcorntimeremote.fragments.JoystickSeriesControllerFragment;
 import eu.se_bastiaan.popcorntimeremote.fragments.SubtitleSelectorDialogFragment;
-import eu.se_bastiaan.popcorntimeremote.rpc.PopcornTimeRpcClient;
-import eu.se_bastiaan.popcorntimeremote.utils.LogUtils;
+import eu.se_bastiaan.popcorntimeremote.models.Instance;
+import eu.se_bastiaan.popcorntimeremote.network.PopcornTimeRpcClient;
 
 public class ControllerActivity extends ActionBarActivity {
-
-    public static final String KEY_IP = "ipAdress", KEY_PORT = "port", KEY_USERNAME = "username", KEY_PASSWORD = "password", KEY_NAME = "name";
 
     private Bundle mExtras;
     private PopcornTimeRpcClient mRpc;
@@ -52,9 +50,9 @@ public class ControllerActivity extends ActionBarActivity {
         Intent intent = getIntent();
         mExtras = intent.getExtras();
 
-        if(mExtras != null && mExtras.containsKey(KEY_IP) && mExtras.containsKey(KEY_PORT) && mExtras.containsKey(KEY_USERNAME) && mExtras.containsKey(KEY_PASSWORD) && mExtras.containsKey(KEY_NAME)) {
-            mRpc = new PopcornTimeRpcClient(this, mExtras.getString(KEY_IP), mExtras.getString(KEY_PORT), mExtras.getString(KEY_USERNAME), mExtras.getString(KEY_PASSWORD));
-            getSupportActionBar().setTitle(getString(R.string.app_name) + ": " + mExtras.getString(KEY_NAME));
+        if(mExtras != null && mExtras.containsKey(Instance.COLUMN_NAME_IP) && mExtras.containsKey(Instance.COLUMN_NAME_PORT) && mExtras.containsKey(Instance.COLUMN_NAME_USERNAME) && mExtras.containsKey(Instance.COLUMN_NAME_PASSWORD) && mExtras.containsKey(Instance.COLUMN_NAME_NAME)) {
+            mRpc = new PopcornTimeRpcClient(this, mExtras.getString(Instance.COLUMN_NAME_IP), mExtras.getString(Instance.COLUMN_NAME_PORT), mExtras.getString(Instance.COLUMN_NAME_USERNAME), mExtras.getString(Instance.COLUMN_NAME_PASSWORD));
+            getSupportActionBar().setTitle(getString(R.string.app_name) + ": " + mExtras.getString(Instance.COLUMN_NAME_NAME));
         } else {
             finish();
         }
@@ -96,7 +94,7 @@ public class ControllerActivity extends ActionBarActivity {
     }
 
     public PopcornTimeRpcClient getClient() {
-        if(mRpc == null && mExtras != null) mRpc = new PopcornTimeRpcClient(this, mExtras.getString(KEY_IP), mExtras.getString(KEY_PORT), mExtras.getString(KEY_USERNAME), mExtras.getString(KEY_PASSWORD));
+        if(mRpc == null && mExtras != null) mRpc = new PopcornTimeRpcClient(this, mExtras.getString(Instance.COLUMN_NAME_IP), mExtras.getString(Instance.COLUMN_NAME_PORT), mExtras.getString(Instance.COLUMN_NAME_USERNAME), mExtras.getString(Instance.COLUMN_NAME_PASSWORD));
         return mRpc;
     }
 

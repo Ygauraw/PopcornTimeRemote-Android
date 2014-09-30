@@ -21,8 +21,8 @@ import android.widget.ListView;
 
 import eu.se_bastiaan.popcorntimeremote.R;
 import eu.se_bastiaan.popcorntimeremote.activities.ControllerActivity;
-import eu.se_bastiaan.popcorntimeremote.database.InstanceEntry;
 import eu.se_bastiaan.popcorntimeremote.database.InstanceProvider;
+import eu.se_bastiaan.popcorntimeremote.models.Instance;
 
 public class InstanceListFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -43,8 +43,8 @@ public class InstanceListFragment extends ListFragment implements LoaderManager.
 
         mAdapter = new SimpleCursorAdapter(getActivity(),
                 R.layout.fragment_listinstance_item, null, new String[]{
-                InstanceEntry.COLUMN_NAME_NAME,
-                InstanceEntry.COLUMN_NAME_IP}, new int[]{
+                Instance.COLUMN_NAME_NAME,
+                Instance.COLUMN_NAME_IP}, new int[]{
                 R.id.text1, R.id.text2}, 0);
 
         getLoaderManager().initLoader(0, null, this);
@@ -61,11 +61,11 @@ public class InstanceListFragment extends ListFragment implements LoaderManager.
         if(!mActionMode) {
             Cursor cursor = (Cursor) parent.getItemAtPosition(position);
             Intent intent = new Intent(getActivity(), ControllerActivity.class);
-            intent.putExtra(ControllerActivity.KEY_IP, cursor.getString(1));
-            intent.putExtra(ControllerActivity.KEY_PORT, cursor.getString(2));
-            intent.putExtra(ControllerActivity.KEY_NAME, cursor.getString(3));
-            intent.putExtra(ControllerActivity.KEY_USERNAME, cursor.getString(4));
-            intent.putExtra(ControllerActivity.KEY_PASSWORD, cursor.getString(5));
+            intent.putExtra(Instance.COLUMN_NAME_IP, cursor.getString(1));
+            intent.putExtra(Instance.COLUMN_NAME_PORT, cursor.getString(2));
+            intent.putExtra(Instance.COLUMN_NAME_NAME, cursor.getString(3));
+            intent.putExtra(Instance.COLUMN_NAME_USERNAME, cursor.getString(4));
+            intent.putExtra(Instance.COLUMN_NAME_PASSWORD, cursor.getString(5));
             startActivity(intent);
         } else {
             getListView().getChildAt(mSelectedPosition).setBackgroundDrawable(null);
@@ -92,8 +92,8 @@ public class InstanceListFragment extends ListFragment implements LoaderManager.
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         return new CursorLoader(getActivity(), InstanceProvider.INSTANCES_URI, new String[]{"_id",
-                InstanceEntry.COLUMN_NAME_IP, InstanceEntry.COLUMN_NAME_PORT,
-                InstanceEntry.COLUMN_NAME_NAME, InstanceEntry.COLUMN_NAME_USERNAME, InstanceEntry.COLUMN_NAME_PASSWORD}, null, null, null);
+                Instance.COLUMN_NAME_IP, Instance.COLUMN_NAME_PORT,
+                Instance.COLUMN_NAME_NAME, Instance.COLUMN_NAME_USERNAME, Instance.COLUMN_NAME_PASSWORD}, null, null, null);
     }
 
     @Override

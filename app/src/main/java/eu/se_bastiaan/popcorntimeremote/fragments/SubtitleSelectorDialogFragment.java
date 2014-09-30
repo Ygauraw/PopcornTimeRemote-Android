@@ -24,7 +24,7 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 import eu.se_bastiaan.popcorntimeremote.R;
 import eu.se_bastiaan.popcorntimeremote.activities.ControllerActivity;
-import eu.se_bastiaan.popcorntimeremote.rpc.PopcornTimeRpcClient;
+import eu.se_bastiaan.popcorntimeremote.network.PopcornTimeRpcClient;
 
 public class SubtitleSelectorDialogFragment extends DialogFragment {
 

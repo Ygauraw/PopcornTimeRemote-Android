@@ -6,19 +6,20 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import eu.se_bastiaan.popcorntimeremote.Constants;
+import eu.se_bastiaan.popcorntimeremote.models.Instance;
 
 public class InstanceDbHelper extends SQLiteOpenHelper {
 
     private static final String TEXT_TYPE = " TEXT";
     private static final String COMMA_SEP = ",";
     private static final String SQL_CREATE_ENTRIES =
-            "CREATE TABLE " + InstanceEntry.TABLE_NAME + " (" +
-                    InstanceEntry._ID + " INTEGER PRIMARY KEY," +
-                    InstanceEntry.COLUMN_NAME_IP + TEXT_TYPE + COMMA_SEP +
-                    InstanceEntry.COLUMN_NAME_PORT + TEXT_TYPE + COMMA_SEP +
-                    InstanceEntry.COLUMN_NAME_NAME + TEXT_TYPE + COMMA_SEP +
-                    InstanceEntry.COLUMN_NAME_USERNAME + TEXT_TYPE + COMMA_SEP +
-                    InstanceEntry.COLUMN_NAME_PASSWORD + TEXT_TYPE +
+            "CREATE TABLE " + Instance.TABLE_NAME + " (" +
+                    Instance._ID + " INTEGER PRIMARY KEY," +
+                    Instance.COLUMN_NAME_IP + TEXT_TYPE + COMMA_SEP +
+                    Instance.COLUMN_NAME_PORT + TEXT_TYPE + COMMA_SEP +
+                    Instance.COLUMN_NAME_NAME + TEXT_TYPE + COMMA_SEP +
+                    Instance.COLUMN_NAME_USERNAME + TEXT_TYPE + COMMA_SEP +
+                    Instance.COLUMN_NAME_PASSWORD + TEXT_TYPE +
                     " )";
 
     public InstanceDbHelper(Context context) {
@@ -42,7 +43,7 @@ public class InstanceDbHelper extends SQLiteOpenHelper {
 
     public boolean isEmpty() {
         SQLiteDatabase db = getReadableDatabase();
-        Cursor cursor = db.query(InstanceEntry.TABLE_NAME, null, null, null, null, null, null, "1");
+        Cursor cursor = db.query(Instance.TABLE_NAME, null, null, null, null, null, null, "1");
         Boolean empty = cursor.getCount() == 0;
         cursor.close();
         db.close();

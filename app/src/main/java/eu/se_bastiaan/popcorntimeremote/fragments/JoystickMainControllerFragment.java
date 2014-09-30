@@ -18,7 +18,7 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 import eu.se_bastiaan.popcorntimeremote.R;
 import eu.se_bastiaan.popcorntimeremote.activities.ControllerActivity;
-import eu.se_bastiaan.popcorntimeremote.rpc.PopcornTimeRpcClient;
+import eu.se_bastiaan.popcorntimeremote.network.PopcornTimeRpcClient;
 import eu.se_bastiaan.popcorntimeremote.utils.LogUtils;
 import eu.se_bastiaan.popcorntimeremote.widget.ClearableEditText;
 import eu.se_bastiaan.popcorntimeremote.widget.JoystickView;

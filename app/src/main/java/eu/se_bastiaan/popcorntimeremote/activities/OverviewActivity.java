@@ -18,8 +18,6 @@ import eu.se_bastiaan.popcorntimeremote.fragments.InstanceListFragment;
 
 public class OverviewActivity extends ActionBarActivity {
 
-    private SimpleCursorAdapter mAdapter;
-
     @InjectView(R.id.progressBar)
     ProgressBar progressBar;
 

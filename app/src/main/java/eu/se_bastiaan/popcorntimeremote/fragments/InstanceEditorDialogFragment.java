@@ -1,19 +1,14 @@
 package eu.se_bastiaan.popcorntimeremote.fragments;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.ContentValues;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -28,10 +23,8 @@ import com.mobsandgeeks.saripaar.annotation.Required;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import eu.se_bastiaan.popcorntimeremote.R;
-import eu.se_bastiaan.popcorntimeremote.activities.PairingScannerActivity;
-import eu.se_bastiaan.popcorntimeremote.database.InstanceEntry;
 import eu.se_bastiaan.popcorntimeremote.database.InstanceProvider;
-import eu.se_bastiaan.popcorntimeremote.models.ScanModel;
+import eu.se_bastiaan.popcorntimeremote.models.Instance;
 
 public class InstanceEditorDialogFragment extends DialogFragment {
 
@@ -58,20 +51,32 @@ public class InstanceEditorDialogFragment extends DialogFragment {
     EditText passwordInput;
     @InjectView(R.id.manualButton)
     Button manualButton;
-    @InjectView(R.id.scanButton)
-    Button scanButton;
-    @InjectView(R.id.pairingLayout)
-    LinearLayout pairingLayout;
+    @InjectView(R.id.zeroconfButton)
+    Button zeroconfButton;
+    @InjectView(R.id.buttonLayout)
+    LinearLayout buttonLayout;
+    @InjectView(R.id.inputLayout)
+    LinearLayout inputLayout;
 
     private Validator.ValidationListener mValidationListener = new Validator.ValidationListener() {
         @Override
         public void onValidationSucceeded() {
             ContentValues values = new ContentValues();
-            values.put(InstanceEntry.COLUMN_NAME_NAME, nameInput.getText().toString());
-            values.put(InstanceEntry.COLUMN_NAME_IP, ipInput.getText().toString());
-            values.put(InstanceEntry.COLUMN_NAME_PORT, portInput.getText().toString());
-            values.put(InstanceEntry.COLUMN_NAME_USERNAME, usernameInput.getText().toString());
-            values.put(InstanceEntry.COLUMN_NAME_PASSWORD, passwordInput.getText().toString());
+            values.put(Instance.COLUMN_NAME_NAME, nameInput.getText().toString());
+            values.put(Instance.COLUMN_NAME_IP, ipInput.getText().toString());
+            values.put(Instance.COLUMN_NAME_PORT, portInput.getText().toString());
+            values.put(Instance.COLUMN_NAME_USERNAME, usernameInput.getText().toString());
+            values.put(Instance.COLUMN_NAME_PASSWORD, passwordInput.getText().toString());
+
+
+            Cursor cursor = getActivity().getContentResolver().query(Uri.withAppendedPath(InstanceProvider.IP_URI, "/" + ipInput.getText().toString()), null, null, null, null);
+            Integer count = cursor.getCount();
+            cursor.close();
+
+            if(count > 0) {
+                ipInput.setError(getString(R.string.ip_already_exists));
+                return;
+            }
 
             if(mIsNewInstance) {
                 getActivity().getContentResolver().insert(InstanceProvider.INSTANCES_URI, values);
@@ -104,6 +109,8 @@ public class InstanceEditorDialogFragment extends DialogFragment {
         } else {
             mId = args.getString("_id");
         }
+
+        if(args != null && args.containsKey(Instance.COLUMN_NAME_IP))
 
         mValidator = new Validator(this);
         mValidator.setValidationListener(mValidationListener);
@@ -162,7 +169,7 @@ public class InstanceEditorDialogFragment extends DialogFragment {
                     portInput.setVisibility(View.VISIBLE);
                     usernameInput.setVisibility(View.VISIBLE);
                     passwordInput.setVisibility(View.VISIBLE);
-                    pairingLayout.setVisibility(View.GONE);
+                    buttonLayout.setVisibility(View.GONE);
                 }
             }
         });
@@ -174,32 +181,17 @@ public class InstanceEditorDialogFragment extends DialogFragment {
                 portInput.setVisibility(View.VISIBLE);
                 usernameInput.setVisibility(View.VISIBLE);
                 passwordInput.setVisibility(View.VISIBLE);
-                pairingLayout.setVisibility(View.GONE);
+                buttonLayout.setVisibility(View.GONE);
             }
         });
 
-        scanButton.setOnClickListener(new View.OnClickListener() {
+        zeroconfButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getActivity(), PairingScannerActivity.class);
-                startActivityForResult(intent, PairingScannerActivity.SCAN);
+                // TODO: Open ZeroConf dialog and fill selection in
             }
         });
 
         return dialog;
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == PairingScannerActivity.SCAN && resultCode == PairingScannerActivity.SUCCESS) {
-            ScanModel model = data.getParcelableExtra("result");
-            ipInput.setText(model.ip);
-            portInput.setText(model.port);
-            usernameInput.setText(model.user);
-            passwordInput.setText(model.user);
-
-            manualButton.performClick();
-        }
     }
 }
