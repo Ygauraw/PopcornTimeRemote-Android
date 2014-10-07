@@ -6,8 +6,8 @@
     <eu.se_bastiaan.popcorntimeremote.widget.JoystickView
         android:id="@+id/joystick"
         android:layout_centerInParent="true"
-        android:layout_height="200dp"
-        android:layout_width="200dp" />
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent" />
 
     <eu.se_bastiaan.popcorntimeremote.widget.ImageButton
         android:id="@+id/upButton"

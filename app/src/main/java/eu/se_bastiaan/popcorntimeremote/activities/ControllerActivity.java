@@ -50,9 +50,10 @@ public class ControllerActivity extends ActionBarActivity {
         Intent intent = getIntent();
         mExtras = intent.getExtras();
 
-        if(mExtras != null && mExtras.containsKey(Instance.COLUMN_NAME_IP) && mExtras.containsKey(Instance.COLUMN_NAME_PORT) && mExtras.containsKey(Instance.COLUMN_NAME_USERNAME) && mExtras.containsKey(Instance.COLUMN_NAME_PASSWORD) && mExtras.containsKey(Instance.COLUMN_NAME_NAME)) {
-            mRpc = new PopcornTimeRpcClient(this, mExtras.getString(Instance.COLUMN_NAME_IP), mExtras.getString(Instance.COLUMN_NAME_PORT), mExtras.getString(Instance.COLUMN_NAME_USERNAME), mExtras.getString(Instance.COLUMN_NAME_PASSWORD));
-            getSupportActionBar().setTitle(getString(R.string.app_name) + ": " + mExtras.getString(Instance.COLUMN_NAME_NAME));
+        if(mExtras != null && mExtras.containsKey("instance")) {
+            Instance instance = (Instance) mExtras.get("instance");
+            mRpc = new PopcornTimeRpcClient(this, instance.ip, instance.port, instance.username, instance.password);
+            getSupportActionBar().setTitle(getString(R.string.app_name) + ": " + instance.name);
         } else {
             finish();
         }

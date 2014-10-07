@@ -31,6 +31,7 @@ public class InstanceEditorDialogFragment extends DialogFragment {
     private Boolean mIsNewInstance = false;
     private Validator mValidator;
     private String mId;
+    private Instance mInstance;
 
     @InjectView(R.id.nameInput)
     @Required(order = 0)
@@ -49,14 +50,6 @@ public class InstanceEditorDialogFragment extends DialogFragment {
     @InjectView(R.id.passwordInput)
     @Required(order = 6)
     EditText passwordInput;
-    @InjectView(R.id.manualButton)
-    Button manualButton;
-    @InjectView(R.id.zeroconfButton)
-    Button zeroconfButton;
-    @InjectView(R.id.buttonLayout)
-    LinearLayout buttonLayout;
-    @InjectView(R.id.inputLayout)
-    LinearLayout inputLayout;
 
     private Validator.ValidationListener mValidationListener = new Validator.ValidationListener() {
         @Override
@@ -68,20 +61,21 @@ public class InstanceEditorDialogFragment extends DialogFragment {
             values.put(Instance.COLUMN_NAME_USERNAME, usernameInput.getText().toString());
             values.put(Instance.COLUMN_NAME_PASSWORD, passwordInput.getText().toString());
 
+            if(mInstance == null || mInstance.id == null || mInstance.ip == null) {
+                Cursor cursor = getActivity().getContentResolver().query(Uri.withAppendedPath(InstanceProvider.IP_URI, "/" + ipInput.getText().toString()), null, null, null, null);
+                Integer count = cursor.getCount();
+                cursor.close();
 
-            Cursor cursor = getActivity().getContentResolver().query(Uri.withAppendedPath(InstanceProvider.IP_URI, "/" + ipInput.getText().toString()), null, null, null, null);
-            Integer count = cursor.getCount();
-            cursor.close();
-
-            if(count > 0) {
-                ipInput.setError(getString(R.string.ip_already_exists));
-                return;
+                if(count > 0) {
+                    ipInput.setError(getString(R.string.ip_already_exists));
+                    return;
+                }
             }
 
-            if(mIsNewInstance) {
+            if(mInstance == null || mInstance.id == null) {
                 getActivity().getContentResolver().insert(InstanceProvider.INSTANCES_URI, values);
             } else {
-                getActivity().getContentResolver().update(Uri.withAppendedPath(InstanceProvider.INSTANCES_URI, "/" + mId), values, null, null);
+                getActivity().getContentResolver().update(Uri.withAppendedPath(InstanceProvider.INSTANCES_URI, "/" + mInstance.id), values, null, null);
             }
 
             dismiss();
@@ -104,13 +98,11 @@ public class InstanceEditorDialogFragment extends DialogFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Bundle args = getArguments();
-        if(args == null || !args.containsKey("_id")) {
+        if(args == null || !args.containsKey("instance")) {
             mIsNewInstance = true;
         } else {
-            mId = args.getString("_id");
+            mInstance = args.getParcelable("instance");
         }
-
-        if(args != null && args.containsKey(Instance.COLUMN_NAME_IP))
 
         mValidator = new Validator(this);
         mValidator.setValidationListener(mValidationListener);
@@ -155,40 +147,13 @@ public class InstanceEditorDialogFragment extends DialogFragment {
                     }
                 });
 
-                if(!mIsNewInstance) {
-                    Cursor cursor = getActivity().getContentResolver().query(Uri.withAppendedPath(InstanceProvider.INSTANCES_URI, "/" + mId), null, null, null, null);
-                    cursor.moveToFirst();
-                    ipInput.setText(cursor.getString(1));
-                    portInput.setText(cursor.getString(2));
-                    nameInput.setText(cursor.getString(3));
-                    usernameInput.setText(cursor.getString(4));
-                    passwordInput.setText(cursor.getString(5));
-                    cursor.close();
-
-                    ipInput.setVisibility(View.VISIBLE);
-                    portInput.setVisibility(View.VISIBLE);
-                    usernameInput.setVisibility(View.VISIBLE);
-                    passwordInput.setVisibility(View.VISIBLE);
-                    buttonLayout.setVisibility(View.GONE);
+                if(mInstance != null) {
+                    ipInput.setText(mInstance.ip);
+                    portInput.setText(mInstance.port);
+                    nameInput.setText(mInstance.name);
+                    usernameInput.setText(mInstance.username);
+                    passwordInput.setText(mInstance.password);
                 }
-            }
-        });
-
-        manualButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ipInput.setVisibility(View.VISIBLE);
-                portInput.setVisibility(View.VISIBLE);
-                usernameInput.setVisibility(View.VISIBLE);
-                passwordInput.setVisibility(View.VISIBLE);
-                buttonLayout.setVisibility(View.GONE);
-            }
-        });
-
-        zeroconfButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // TODO: Open ZeroConf dialog and fill selection in
             }
         });
 

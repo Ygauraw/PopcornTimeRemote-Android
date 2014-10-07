@@ -24,7 +24,7 @@ import eu.se_bastiaan.popcorntimeremote.network.ZeroConfClient;
 
 public class ZeroConfAdapter extends BaseAdapter {
 
-    private static class ViewHolder {
+    class ViewHolder {
         public ViewHolder(View v) {
             ButterKnife.inject(this, v);
         }

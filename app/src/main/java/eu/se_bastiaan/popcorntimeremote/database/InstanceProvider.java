@@ -48,6 +48,7 @@ public class InstanceProvider extends ContentProvider {
             db.close();
 
             getContext().getContentResolver().notifyChange(uri, null);
+            return 1;
         }
         return 0;
     }
@@ -106,7 +107,7 @@ public class InstanceProvider extends ContentProvider {
                 queryBuilder.appendWhere(Instance._ID + " = " + uri.getLastPathSegment());
                 break;
             case IP_INSTANCE:
-                queryBuilder.appendWhere(Instance.COLUMN_NAME_IP + " = " + uri.getLastPathSegment());
+                queryBuilder.appendWhere(Instance.COLUMN_NAME_IP + " = \"" + uri.getLastPathSegment() + "\"");
                 break;
             default:
                 queryBuilder.appendWhere("1");

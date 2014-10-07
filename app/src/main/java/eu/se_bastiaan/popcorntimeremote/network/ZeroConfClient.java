@@ -3,6 +3,7 @@ package eu.se_bastiaan.popcorntimeremote.network;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 
@@ -24,7 +25,7 @@ public class ZeroConfClient {
     protected static final Integer BUFFER_SIZE = 4096;
     protected int BROADCAST_PORT;
 
-    private boolean mRunThread = false;
+    private boolean mReceiveMessages = false;
 
     protected Context mContext;
     private DatagramSocket mDatagramSocket;
@@ -47,7 +48,22 @@ public class ZeroConfClient {
         mContext = context.getApplicationContext();
         BROADCAST_PORT = broadcastPort;
 
+        openSocket();
         mIncomingMessageHandler = new Handler(Looper.getMainLooper());
+    }
+
+    public boolean openSocket() {
+        if(mDatagramSocket != null) return true;
+
+        try {
+            mDatagramSocket = new DatagramSocket();
+            mDatagramSocket.setBroadcast(true);
+            return true;
+        } catch (SocketException e) {
+            LogUtils.d("ZeroConf", "There was a problem creating the sending socket. Aborting.");
+            e.printStackTrace();
+        }
+        return false;
     }
 
     /**
@@ -76,7 +92,7 @@ public class ZeroConfClient {
         }
 
         // Build the packet
-        ZeroConfMessage msg;
+        final ZeroConfMessage msg;
 
         try {
             msg = new ZeroConfMessage(message, InetAddress.getByName("255.255.255.255"));
@@ -86,8 +102,19 @@ public class ZeroConfClient {
             return false;
         }
 
-        mMessageQueue.add(msg);
-        mRunThread = true;
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... voids) {
+                try {
+                    LogUtils.d("ZeroConf", "Sending the UDP packet");
+                    mDatagramSocket.send(msg.getPacket(BROADCAST_PORT));
+                } catch (IOException e) {
+                    LogUtils.d("ZeroConf", "There was an error sending the UDP packet. Aborted.");
+                    e.printStackTrace();
+                }
+                return null;
+            }
+        }.execute();
 
         return true;
     }
@@ -101,61 +128,51 @@ public class ZeroConfClient {
     }
 
     public void startClient(Runnable messageAnalyseRunnable) {
-        startClient();
         mMessageAnalyseRunnable = messageAnalyseRunnable;
+        startClient();
+    }
+
+    public Boolean isStarted() {
+        return mReceiveMessages;
     }
 
     public void startClient() {
-        mRunThread = true;
+        LogUtils.d("ZeroConf", "Starting ZeroConf client");
+
+        mReceiveMessages = true;
 
         if(mThread == null)
-            mThread = new Thread(mClientRunnable);
+            mThread = new Thread(mReceiveRunnable);
 
         if(!mThread.isAlive())
             mThread.start();
     }
 
     public void stopClient() {
-        mRunThread = false;
+        mReceiveMessages = false;
     }
 
-
-    Runnable mClientRunnable = new Runnable() {
+    Runnable mReceiveRunnable = new Runnable() {
         @Override
         public void run() {
-            try {
-                mDatagramSocket = new DatagramSocket();
-                mDatagramSocket.setBroadcast(true);
-            } catch (SocketException e) {
-                LogUtils.d("ZeroConf", "There was a problem creating the sending socket. Aborting.");
-                e.printStackTrace();
-                stopClient();
-            }
-
             byte[] buffer = new byte[BUFFER_SIZE];
             DatagramPacket rPacket = new DatagramPacket(buffer, buffer.length);
 
-            while(mRunThread) {
-                for(ZeroConfMessage msg : mMessageQueue) {
-                    try {
-                        mDatagramSocket.send(msg.getPacket(BROADCAST_PORT));
-                        mMessageQueue.remove(msg);
-                    } catch (IOException e) {
-                        LogUtils.d("ZeroConf", "There was an error sending the UDP packet. Aborted.");
-                        e.printStackTrace();
-                    }
-                }
-
+            while(mReceiveMessages) {
                 try {
+                    LogUtils.d("ZeroConf", "Receiving the UDP packet");
                     mDatagramSocket.receive(rPacket);
-                } catch (IOException e1) {
+                    LogUtils.d("ZeroConf", "Done receiving the UDP packet");
+                } catch (IOException e) {
                     LogUtils.d("ZeroConf", "There was a problem receiving the incoming message.");
-                    e1.printStackTrace();
+                    e.printStackTrace();
                     continue;
                 }
 
-                if (!mRunThread)
+                if (!mReceiveMessages) {
+                    LogUtils.d("ZeroConf", "Stopping thread...");
                     break;
+                }
 
                 byte data[] = rPacket.getData();
 
@@ -177,10 +194,13 @@ public class ZeroConfClient {
                     continue;
                 }
 
+                LogUtils.d("ZeroConf", "Posting message to handler, if available");
                 if(mMessageAnalyseRunnable != null) {
                     mIncomingMessageHandler.post(mMessageAnalyseRunnable);
+                    LogUtils.d("ZeroConf", "Posted message to handler");
                 }
             }
+            LogUtils.d("ZeroConf", "Stopping thread");
         }
     };
 

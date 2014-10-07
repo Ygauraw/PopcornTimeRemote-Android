@@ -23,11 +23,13 @@ import eu.se_bastiaan.popcorntimeremote.R;
 import eu.se_bastiaan.popcorntimeremote.activities.ControllerActivity;
 import eu.se_bastiaan.popcorntimeremote.database.InstanceProvider;
 import eu.se_bastiaan.popcorntimeremote.models.Instance;
+import eu.se_bastiaan.popcorntimeremote.utils.LogUtils;
+import eu.se_bastiaan.popcorntimeremote.widget.InstanceAdapter;
 
 public class InstanceListFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private Boolean mActionMode = false;
-    private SimpleCursorAdapter mAdapter;
+    private InstanceAdapter mAdapter;
     private Integer mSelectedPosition;
     private ActionMode mMode;
 
@@ -41,11 +43,7 @@ public class InstanceListFragment extends ListFragment implements LoaderManager.
         getListView().setOnItemLongClickListener(mOnLongClickListener);
         getListView().setSelector(R.drawable.selectable_background_popcorntimeremote);
 
-        mAdapter = new SimpleCursorAdapter(getActivity(),
-                R.layout.fragment_listinstance_item, null, new String[]{
-                Instance.COLUMN_NAME_NAME,
-                Instance.COLUMN_NAME_IP}, new int[]{
-                R.id.text1, R.id.text2}, 0);
+        mAdapter = new InstanceAdapter(getActivity(), null);
 
         getLoaderManager().initLoader(0, null, this);
     }
@@ -59,14 +57,14 @@ public class InstanceListFragment extends ListFragment implements LoaderManager.
     @Override
     public void onListItemClick(ListView parent, View view, int position, long id) {
         if(!mActionMode) {
-            Cursor cursor = (Cursor) parent.getItemAtPosition(position);
-            Intent intent = new Intent(getActivity(), ControllerActivity.class);
-            intent.putExtra(Instance.COLUMN_NAME_IP, cursor.getString(1));
-            intent.putExtra(Instance.COLUMN_NAME_PORT, cursor.getString(2));
-            intent.putExtra(Instance.COLUMN_NAME_NAME, cursor.getString(3));
-            intent.putExtra(Instance.COLUMN_NAME_USERNAME, cursor.getString(4));
-            intent.putExtra(Instance.COLUMN_NAME_PASSWORD, cursor.getString(5));
-            startActivity(intent);
+            Instance instance = (Instance) getListView().getItemAtPosition(position);
+            if(instance.id != null) {
+                Intent intent = new Intent(getActivity(), ControllerActivity.class);
+                intent.putExtra("instance", instance);
+                startActivity(intent);
+            } else {
+                openEditorFragment(instance);
+            }
         } else {
             getListView().getChildAt(mSelectedPosition).setBackgroundDrawable(null);
             mSelectedPosition = position;
@@ -91,6 +89,7 @@ public class InstanceListFragment extends ListFragment implements LoaderManager.
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        LogUtils.d("InstanceListFragment", "onCreateLoader");
         return new CursorLoader(getActivity(), InstanceProvider.INSTANCES_URI, new String[]{"_id",
                 Instance.COLUMN_NAME_IP, Instance.COLUMN_NAME_PORT,
                 Instance.COLUMN_NAME_NAME, Instance.COLUMN_NAME_USERNAME, Instance.COLUMN_NAME_PASSWORD}, null, null, null);
@@ -98,9 +97,11 @@ public class InstanceListFragment extends ListFragment implements LoaderManager.
 
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
+        LogUtils.d("InstanceListFragment", "onLoadFinished");
         if(getListAdapter() == null) {
             setListAdapter(mAdapter);
         }
+
         mAdapter.swapCursor(cursor);
         if(mAdapter.getCount() <= 0) {
             setEmptyText(getActivity().getString(R.string.no_instances));
@@ -109,6 +110,7 @@ public class InstanceListFragment extends ListFragment implements LoaderManager.
 
     @Override
     public void onLoaderReset(Loader loader) {
+        LogUtils.d("InstanceListFragment", "onLoaderReset");
         mAdapter.swapCursor(null);
     }
 
@@ -132,14 +134,15 @@ public class InstanceListFragment extends ListFragment implements LoaderManager.
 
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-            Cursor cursor = (Cursor) getListView().getItemAtPosition(mSelectedPosition);
+            Instance instance = (Instance) getListView().getItemAtPosition(mSelectedPosition);
             switch (item.getItemId()) {
                 case R.id.action_delete:
-                    getActivity().getContentResolver().delete(Uri.withAppendedPath(InstanceProvider.INSTANCES_URI, "/" + cursor.getString(0)), null, null);
+                    getActivity().getContentResolver().delete(Uri.withAppendedPath(InstanceProvider.INSTANCES_URI, "/" + instance.id), null, null);
+                    ((InstanceAdapter) getListView().getAdapter()).notifyDataSetChanged();
                     mMode.finish();
                     break;
                 case R.id.action_edit:
-                    openEditorFragment(cursor.getString(0));
+                    openEditorFragment(instance);
                     mMode.finish();
                     break;
             }
@@ -163,11 +166,11 @@ public class InstanceListFragment extends ListFragment implements LoaderManager.
         }
     }
 
-    private void openEditorFragment(String id) {
+    private void openEditorFragment(Instance instance) {
         InstanceEditorDialogFragment fragment = new InstanceEditorDialogFragment();
-        if(id != null) {
+        if(instance != null) {
             Bundle args = new Bundle();
-            args.putString("_id", id);
+            args.putParcelable("instance", instance);
             fragment.setArguments(args);
         }
         fragment.show(getActivity().getSupportFragmentManager(), "editor_fragment");
